@@ -38,7 +38,9 @@ def get_image(url, save_path, resize_size, run_parallel=False, print_error=False
 
 def get_urls_and_save_paths(filtered_df, args, split='train'):
     if args.exclude:
-        exclude_path = os.path.join(args.dataset_dir_path, args.exclude)
+        exclude_paths = []
+        for dir in args.exclude:
+            exclude_paths.append(os.path.join(args.dataset_dir_path, dir))
 
     image_urls = []
     save_paths = []
@@ -58,10 +60,11 @@ def get_urls_and_save_paths(filtered_df, args, split='train'):
             continue
         
         if args.exclude:
-            exclude_train_path = os.path.join(exclude_path, 'train', label, str(row["gbifID"])+ ".jpg")
-            exclude_test_path = os.path.join(exclude_path, 'test', label, str(row["gbifID"])+ ".jpg")
-            if os.path.exists(exclude_train_path) or os.path.exists(exclude_test_path):
-                continue
+            for exclude_path in exclude_paths:
+                exclude_train_path = os.path.join(exclude_path, 'train', label, str(row["gbifID"])+ ".jpg")
+                exclude_test_path = os.path.join(exclude_path, 'test', label, str(row["gbifID"])+ ".jpg")
+                if os.path.exists(exclude_train_path) or os.path.exists(exclude_test_path):
+                    continue
 
         if os.path.exists(save_path):
             continue
@@ -113,12 +116,18 @@ def print_stat(args, split):
 
 
 def main():
+
+    def list_of_strings(arg):
+        return arg.split(',')
+
     parser = argparse.ArgumentParser(description='GBIF Mushroom Dataset Image Scraping')
 
     parser.add_argument('--dataset_dir_path', type=str, 
                         default='/Users/seohyeong/Projects/ShroomAI/ShroomAI/dataset')
     parser.add_argument('--img_dir_name', type=str, default='images_100_20240724')
-    parser.add_argument('--exclude', type=str, default='images_100_combined')
+    parser.add_argument('--exclude', type=list_of_strings, 
+                        default='images_100_combined, images_100_20240722, images_100_20240724',
+                        help='names of directories to exclude')
 
     parser.add_argument('--seed', type=int, default=1)
     parser.add_argument('--max_workers', type=int, default=12)
