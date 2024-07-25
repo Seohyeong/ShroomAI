@@ -1,6 +1,12 @@
 # About the Dataset
-Mushroom images dataset collected from https://www.gbif.org/
+This dataset consists of mushroom images collected from [GBIF (Global Biodiversity Information Facility)](https://www.gbif.org/). 
+Each image is associated with a specific species, selected from a hierarchical taxonomy that includes multiple layers such as family, phylum, class, order, and species. `Species` is used as labels for the images in the dataset.
 
+**Dataset Details**  
+Total Species: 747  
+Images per Species: Approximately 1,000  
+
+The dataset is intended for research and exploration of mushroom species diversity and visual identification.
 
 ## Dataset Download
 
@@ -26,7 +32,7 @@ GBIF.org (13 July 2024) GBIF Occurrence Download https://doi.org/10.15468/dl.ymr
 ```
 
 
-## Dataset Strcture
+## Downloaded Dataset Strcture
 ```
 ./raw
     ├── citations.txt
@@ -72,11 +78,65 @@ The purpose of this step is to filter out samples and link image URLs to occurre
 
 The `species` column serves as a label, and only species with more than 1,000 occurrences are included (resulting in 1,000 images per class). This process yields a total of **747** mushroom species classes.
 
+### Dataset Structure
+Final structure of the collected dataset.
+
+```
+./images
+    ├── train                             // train split
+    │     ├── abortiporus_biennis         // folder (species as name)
+    │     │     ├── 1257417838.jpg        // image  (gbifID as name)
+    │     │     ├── ...
+    │     │     └── 3325367423.jpg
+    │     │     
+    │     ├── ...
+    │     │     ├── ...
+    │     │     ├── ...
+    │     │     └── ...
+    │     │
+    │     └── xylodon_radula
+    │           ├── 1294736284.jpg
+    │           ├── ...
+    │           └── 9725374923.jpg
+    │
+    └── test                              // test split
+          ├── abortiporus_biennis
+          │     ├── 1257417838.jpg
+          │     ├── ...
+          │     └── 3325367423.jpg
+          │
+          ├── ...
+          │     ├── ...
+          │     ├── ...
+          │     └── ...
+          │
+          └── xylodon_radula
+                ├── 3716172922.jng
+                ├── ...
+                └── 7528392372.jng
+```
+
+This structure compatible with Tensorflow ImageFolder data structure.
+```python
+import tensorflow_datasets as tfds
+builder = tfds.folder_dataset.ImageFolder('./images/')
+raw_train = builder.as_dataset(split='train', shuffle_files=True)
+raw_test = builder.as_dataset(split='test', shuffle_files=True)
+```
 
 ## Statistics
 
 ### Statistics of Taxonomy
-<img src="taxonomy_stat.png" width="500" >
+The table below displays the number of species for each class within the Ascomycota and Basidiomycota phyla. For detailed taxonomy information, refer to `taxonomy.tsv`.
 
-### Statistics of Dataset
-TBU
+<img src="taxonomy_stat.png" width="400" >
+
+### Examples
+These are 16 image/label pairs from the collected dataset.
+
+<img src="examples.png" width="700" >
+
+### Caveats
+Note that three species(Bulgaria inquinans, Exidia glandulosa, Exidiopsis effusa) were found to have a non-unique value of family.
+
+<img src="overlapping_species.png" width="700" >
