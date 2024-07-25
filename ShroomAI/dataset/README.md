@@ -116,7 +116,7 @@ Final structure of the collected dataset.
                 └── 7528392372.jng
 ```
 
-This structure compatible with Tensorflow ImageFolder data structure.
+This directory structure is compatible with Tensorflow ImageFolder data structure.
 ```python
 import tensorflow_datasets as tfds
 builder = tfds.folder_dataset.ImageFolder('./images/')
@@ -129,7 +129,7 @@ raw_test = builder.as_dataset(split='test', shuffle_files=True)
 ### Statistics of Taxonomy
 The table below displays the number of species for each class within the Ascomycota and Basidiomycota phyla. For detailed taxonomy information, refer to `taxonomy.tsv`.
 
-<img src="taxonomy_stat.png" width="400" >
+<img src="taxonomy_stat.png" width="500" >
 
 ### Examples
 These are 16 image/label pairs from the collected dataset.
