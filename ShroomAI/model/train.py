@@ -64,7 +64,7 @@ def main():
     parser = argparse.ArgumentParser(description='Training MobileNetV2 with GBIF Mushroom Dataset')
 
     parser.add_argument('--dataset_dir_path', type=str, 
-                        default='/Users/seohyeong/Projects/ShroomAI/ShroomAI/dataset/images_100_combined/')
+                        default='/Users/seohyeong/Projects/ShroomAI/ShroomAI/dataset/images/')
     parser.add_argument('--ckpt_dir_path', type=str, default='/content/drive/MyDrive/fungi/ckpt')
     parser.add_argument('--model_path', type=str, default=None, 
                         help='pass saved model path to run evaluation')

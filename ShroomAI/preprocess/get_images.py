@@ -21,19 +21,26 @@ def get_image(url, save_path, resize_size, run_parallel=False, print_error=False
         try:
             image = Image.open(BytesIO(response.content))
             resized_image = image.resize((resize_size, resize_size))
-            resized_image.save(save_path)
+            try:
+                resized_image.save(save_path)
+            except OSError as e:
+                if 'cannot write mode RGBA as JPEG' in str(e):
+                    resized_image = resized_image.convert('RGB')
+                    resized_image.save(save_path)
+                if run_parallel:
+                    return True
             if run_parallel:
                 return True
         except Exception as e:
             if print_error:
                 print(f"    >> Failed to LOAD image: {e}")
             if run_parallel:
-                return False
+                return True
     except requests.exceptions.RequestException as e:
         if print_error:
             print(f"    >> Failed to DOWNLOAD image: {e}")
         if run_parallel:
-            return False
+            return True
     
 
 def get_urls_and_save_paths(filtered_df, args, split='train'):
@@ -59,12 +66,18 @@ def get_urls_and_save_paths(filtered_df, args, split='train'):
         if len(os.listdir(label_dir_path)) + len(class_to_paths[label]) >= args.max_images_per_class:
             continue
         
+        break_outer = False
+
         if args.exclude:
             for exclude_path in exclude_paths:
                 exclude_train_path = os.path.join(exclude_path, 'train', label, str(row["gbifID"])+ ".jpg")
                 exclude_test_path = os.path.join(exclude_path, 'test', label, str(row["gbifID"])+ ".jpg")
                 if os.path.exists(exclude_train_path) or os.path.exists(exclude_test_path):
-                    continue
+                    break_outer = True
+                    break
+
+            if break_outer:
+                continue
 
         if os.path.exists(save_path):
             continue
@@ -118,20 +131,21 @@ def print_stat(args, split):
 def main():
 
     def list_of_strings(arg):
-        return arg.split(',')
+        return arg.split(', ')
 
     parser = argparse.ArgumentParser(description='GBIF Mushroom Dataset Image Scraping')
 
     parser.add_argument('--dataset_dir_path', type=str, 
                         default='/Users/seohyeong/Projects/ShroomAI/ShroomAI/dataset')
-    parser.add_argument('--img_dir_name', type=str, default='images_100_20240724')
+    parser.add_argument('--data_file_name', type=str, default='more_sampled_df.txt')
+    parser.add_argument('--img_dir_name', type=str, default='images_20240822')
     parser.add_argument('--exclude', type=list_of_strings, 
-                        default='images_100_combined, images_100_20240722, images_100_20240724',
+                        default='images, images_20240725, images_20240731, images_20240802, images_20240805',
                         help='names of directories to exclude')
 
     parser.add_argument('--seed', type=int, default=1)
     parser.add_argument('--max_workers', type=int, default=12)
-    parser.add_argument('--max_images_per_class', type=int, default=100)
+    parser.add_argument('--max_images_per_class', type=int, default=200)
     parser.add_argument('--resize_size', type=int, default=224)
 
     parser.add_argument('--split_train_test', action='store_true', help='whether to split downloaded images into train/test split')
@@ -146,7 +160,7 @@ def main():
 
     # create image folder structure 
     if not args.img_dir_name:
-        args.img_dir_name = 'images_{}'.format(datetime.datetime.now().strftime('%Y%m%d_%H%M%S'))
+        args.img_dir_name = 'images_{}'.format(datetime.datetime.now().strftime('%Y%m%d'))
         args.img_dir_path = os.path.join(args.dataset_dir_path, args.img_dir_name)
         if not os.path.exists(args.img_dir_path):
             os.mkdir(args.img_dir_path)
@@ -157,7 +171,7 @@ def main():
         print(' > Creating Directory: {}'.format(os.path.join(args.img_dir_path, 'train')))
         print(' > Creating Directory: {}'.format(os.path.join(args.img_dir_path, 'test')))
 
-        filtered_df = pd.read_csv(os.path.join(args.dataset_dir_path, 'sampled_df.txt'), sep='\t')
+        filtered_df = pd.read_csv(os.path.join(args.dataset_dir_path, args.data_file_name), sep='\t')
         
         # create label folders inside image folder structure
         print('     > Creating Subdirectory of label...')
@@ -170,7 +184,7 @@ def main():
             if not os.path.exists(test_label_dir_path):
                 os.mkdir(test_label_dir_path)
     else:
-        filtered_df = pd.read_csv(os.path.join(args.dataset_dir_path, 'sampled_df.txt'), sep='\t')
+        filtered_df = pd.read_csv(os.path.join(args.dataset_dir_path, args.data_file_name), sep='\t')
         args.img_dir_path = os.path.join(args.dataset_dir_path, args.img_dir_name)
 
     # first download images to 'train' folder

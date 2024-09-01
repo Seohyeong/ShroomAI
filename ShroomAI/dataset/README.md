@@ -127,16 +127,16 @@ raw_test = builder.as_dataset(split='test', shuffle_files=True)
 ## Statistics
 
 ### Statistics of Taxonomy
-The table below displays the number of species for each class within the Ascomycota and Basidiomycota phyla. For detailed taxonomy information, refer to `taxonomy.tsv`.
+The table below displays the number of species for each class within the Ascomycota and Basidiomycota phyla. For detailed taxonomy information, refer to `readme_docs/taxonomy.tsv`.
 
-<img src="taxonomy_stat.png" width="500" >
+<img src="readme_docs/taxonomy_stat.png" width="500" >
 
 ### Examples
 These are 16 image/label pairs from the collected dataset.
 
-<img src="examples.png" width="700" >
+<img src="readme_docs/examples.png" width="700" >
 
 ### Caveats
 Note that three species(Bulgaria inquinans, Exidia glandulosa, Exidiopsis effusa) were found to have a non-unique value of family.
 
-<img src="overlapping_species.png" width="700" >
+<img src="readme_docs/overlapping_species.png" width="700" >
