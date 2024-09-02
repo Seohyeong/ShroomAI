@@ -1,0 +1,7 @@
+coremltools==6.3.0
+tensorflow==2.13.0
+tensorflow-datasets==4.9.6
+keras==2.13.1
+pandas==2.2.2
+matplotlib==3.9.2
+mlflow==2.16.0
