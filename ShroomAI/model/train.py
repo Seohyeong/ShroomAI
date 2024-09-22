@@ -44,7 +44,7 @@ def main():
     parser.add_argument('--factor', type=float, default=0.25)
 
     parser.add_argument('--img_size', type=int, default=224)
-    parser.add_argument('--eval_batch_size', type=int, default=1024, help='evaluation batch size')
+    parser.add_argument('--eval_batch_size', type=int, default=1024, help='evaluation batch size') # 1024
     parser.add_argument('--batch_shuffle_buffer_size', type=int, default=1000)
 
     # pretrain
@@ -67,12 +67,6 @@ def main():
 
     args = parser.parse_args()
     # args, unknown = parser.parse_known_args() 
-
-    args.use_google_colab = True
-    args.pretrain = True
-    args.finetune = True
-    args.evaluate = True
-    args.plot = False
 
     try:
         assert(tf.__version__=='2.13.0')
