@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import torch
 
 def get_result(history):
     result = {}
@@ -74,8 +75,39 @@ def plot(history, desc):
     plt.show()
 
 
+def custom_print(message, file_path='training_log.txt'):
+    with open(file_path, 'a') as f:
+        f.write(message + '\n')
+    print(message)
+    
+    
+class EarlyStopping:
+    def __init__(self, patience=10, min_delta=0):
+        self.patience = patience
+        self.min_delta = min_delta
+        self.counter = 0
+        self.best_score = None
+        self.early_stop = False
+
+    def __call__(self, score):
+        if self.best_score is None:
+            self.best_score = score
+        elif score < self.best_score - self.min_delta:
+            self.best_score = score
+            self.counter = 0
+        else:
+            self.counter += 1
+            if self.counter >= self.patience:
+                self.early_stop = True
 
 
+def save_model(model, optimizer, file_path):
+    checkpoint = {
+        'model_state_dict': model.state_dict(),
+        'optimizer_state_dict': optimizer.state_dict(),
+    }
+    torch.save(checkpoint, file_path)
+    
 ############################
 
 def imshow(inp, title=None):

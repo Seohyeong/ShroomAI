@@ -3,5 +3,7 @@ ShroomAI/dataset/images_100_3314.zip
 
 ShroomAI/ckpt/
 
+__pycache__
+
 .vscode/
 README.md
