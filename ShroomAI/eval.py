@@ -5,10 +5,10 @@ import torch
 import torch.nn as nn
 
 from dataset.dataset import MushroomDataset
-from models.mobilenetv2 import MobileNetV2
+from models.shroomnet import ShroomNet
 from utils.utils import custom_print
 
-
+# TODO: merge this function with train() in train.py
 def evaluate(model, dataloader, dataset_size, device, log_file):
     model.eval()
 
@@ -17,16 +17,21 @@ def evaluate(model, dataloader, dataset_size, device, log_file):
 
     with torch.set_grad_enabled(False):
         for inputs, labels in dataloader:
-            inputs = inputs.to(device)
-            labels = labels.to(device)
-
-            outputs = model(inputs)
-            loss = nn.CrossEntropyLoss()(outputs, labels)
+            labels_species, *labels_genus = labels
             
-            _, topk_indices = torch.topk(outputs, 5, dim=1)
+            inputs = inputs.to(device)
+            labels_species = labels_species.to(device)
+            if labels_genus:
+                labels_genus = labels_genus[0].to(device)
+
+            outputs_species, *outputs_genus = model(inputs)
+            criterion = nn.CrossEntropyLoss()
+            loss = criterion(outputs_species, labels_species)
+            
+            _, topk_indices = torch.topk(outputs_species, 5, dim=1)
 
             for k in range(1, 6):
-                correct_topk = topk_indices[:, :k].eq(labels.view(-1, 1).expand_as(topk_indices[:, :k]))
+                correct_topk = topk_indices[:, :k].eq(labels_species.view(-1, 1).expand_as(topk_indices[:, :k]))
                 running_corrects_topn[k-1] += correct_topk.sum().item()
 
             running_loss += loss.item() * inputs.size(0)
@@ -48,10 +53,10 @@ def main():
     args = parser.parse_args()
 
     # Log file path
-    log_file = os.path.join(os.path.dirname(args.eval_model_path), 'eval_log_file,txt')
+    log_file = os.path.join(os.path.dirname(args.eval_model_path), 'eval_log_file.txt')
     
     # Dataloader
-    print('> Building Dataloader...')
+    print('\n> Building Dataloader...')
     val_dataset = MushroomDataset(os.path.join(args.dataset_dir_path, 'val'), mode='val')
     val_dataloader = torch.utils.data.DataLoader(val_dataset, 
                                                  batch_size=args.eval_batch_size, 
@@ -64,15 +69,15 @@ def main():
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     
     # Model
-    mobilenet = MobileNetV2(num_classes=val_dataset.num_classes)
-    mobilenet.to(device)
+    shroomnet = ShroomNet(num_classes=val_dataset.num_classes)
+    shroomnet.to(device)
 
-    custom_print('> Evaluating Model...', log_file)
+    custom_print('\n> Evaluating Model...', log_file)
     custom_print(' >> Evaluating {}'.format(args.eval_model_path), log_file)
     
     checkpoint = torch.load(args.eval_model_path, weights_only=True)
-    mobilenet.load_state_dict(checkpoint['model_state_dict'])
-    evaluate(mobilenet, val_dataloader, len(val_dataset), device, log_file)
+    shroomnet.load_state_dict(checkpoint['model_state_dict'])
+    evaluate(shroomnet, val_dataloader, len(val_dataset), device, log_file)
 
 
 if __name__== '__main__':

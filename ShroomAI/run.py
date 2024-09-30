@@ -6,7 +6,7 @@ import torch
 import torch.backends.cudnn as cudnn
 
 from dataset.dataset import MushroomDataset
-from models.mobilenetv2 import MobileNetV2
+from models.shroomnet import ShroomNet
 from train import prepare_and_train
 from utils.utils import custom_print
 
@@ -26,6 +26,10 @@ def main():
                         default=None,
                         help='continue finetuning with the pretrained checkpoint')
 
+    # backbone model
+    parser.add_argument('--model_name', type=str, default='efficientnet_b0', 
+                        choices=['mobilenet_v2', 'efficientnet_b0'])
+    
     # lr decay
     parser.add_argument('--patience', type=int, default=3)
     parser.add_argument('--cooldown', type=int, default=0)
@@ -55,7 +59,7 @@ def main():
         assert args.pt_model_path, "Pretrain first to finetune, otherwise pass pretrain_model_path."
 
     # Dataloaders
-    print('> Building Dataloader...')
+    print('\n> Building Dataloader...')
     train_dataset = MushroomDataset(os.path.join(args.dataset_dir_path, 'train'), args.meta_info_path, mode='train')
     val_dataset = MushroomDataset(os.path.join(args.dataset_dir_path, 'val'), args.meta_info_path, mode='val')
     assert train_dataset.num_classes == val_dataset.num_classes
@@ -68,33 +72,36 @@ def main():
 
     if args.pretrain:
         
-        save_dir = os.path.join(args.ckpt_dir_path, 'model_{}'.format(datetime.datetime.now().strftime('%Y%m%d_%H%M%S')))
+        save_dir = os.path.join(args.ckpt_dir_path, '{}_{}'.format(args.model_name, datetime.datetime.now().strftime('%Y%m%d_%H%M%S')))
         os.mkdir(save_dir)
         log_file = os.path.join(save_dir, "log.txt")
         
-        custom_print('> Loading Pre-trained MobileNetV2...', log_file)
-        mobilenet = MobileNetV2(num_classes=num_classes)
-        mobilenet = mobilenet.to(device)
+        custom_print(f'\n> Loading Pre-trained {args.model_name}...', log_file)
+        shroomnet = ShroomNet(num_classes=num_classes, model_name=args.model_name)
+        total_params = sum(p.numel() for p in shroomnet.parameters() if p.requires_grad)
+        custom_print(f' >> Total # of Trainable Params: {total_params:,}...', log_file)
+        
+        shroomnet = shroomnet.to(device)
 
-        prepare_and_train(args, mobilenet, train_dataset, val_dataset, device, log_file, save_dir, phase='pretrain')
+        trained_model = prepare_and_train(args, shroomnet, train_dataset, val_dataset, device, log_file, save_dir, phase='pretrain')
 
 
     if args.finetune:
         
         if args.pt_model_path:
             # load ckpt
-            print('> Loading ckpt: {}'.format(args.pt_model_path))
+            print('\n> Loading ckpt: {}'.format(args.pt_model_path))
             checkpoint = torch.load(args.pt_model_path, weights_only=True)
-            trained_model = MobileNetV2(num_classes=num_classes)
-            trained_model.load_state_dict(checkpoint['model_state_dict'])
-            trained_model = trained_model.to(device)
+            shroomnet = ShroomNet(num_classes=num_classes, model_name=args.model_name)
+            shroomnet.load_state_dict(checkpoint['model_state_dict'])
+            trained_model = shroomnet.to(device)
             # redefine save path
             save_dir = os.path.join(os.path.dirname(args.pt_model_path), 'tag_{}'.format(datetime.datetime.now().strftime('%Y%m%d_%H%M%S')))
             os.mkdir(save_dir)
             # redefine log file path
             log_file = os.path.join(save_dir, "log.txt")
 
-        prepare_and_train(args, mobilenet, train_dataset, val_dataset, device, log_file, save_dir, phase='finetune')
+        _ = prepare_and_train(args, trained_model, train_dataset, val_dataset, device, log_file, save_dir, phase='finetune')
 
 
 if __name__== '__main__':

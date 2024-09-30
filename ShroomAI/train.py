@@ -90,6 +90,9 @@ def train(model, dataloaders, dataset_sizes, optimizer, scheduler, num_epochs, d
                 if flag_multitask:
                     epoch_loss_species = running_loss_species / dataset_sizes[phase]
                     epoch_loss_genus = running_loss_genus / dataset_sizes[phase]
+                else:
+                    epoch_loss_species = epoch_loss
+                    epoch_loss_genus = 0.0
 
                 if phase == 'val':
                     scheduler.step(epoch_acc) # TODO: scheduler update in val loop
@@ -125,14 +128,6 @@ def train(model, dataloaders, dataset_sizes, optimizer, scheduler, num_epochs, d
 def prepare_and_train(args, model, train_dataset, val_dataset, device, log_file, save_dir, run_eval=True, phase=None):
     # Prepare
     if phase == 'pretrain':
-        # params = (
-        #     list(model.mobilenet.classifier.parameters()) + 
-        #     list(model.species_head.parameters()) + 
-        #     list(model.genus_head.parameters())
-        #     ) if hasattr(model, 'genus') else (
-        #         list(model.mobilenet.classifier.parameters()) + 
-        #         list(model.species_head.parameters())
-        #         )
         for np, p in model.named_parameters():
             if ('classifier' in np) or ('head' in np):
                 p.requires_grad = True
@@ -142,27 +137,29 @@ def prepare_and_train(args, model, train_dataset, val_dataset, device, log_file,
         epoch = args.pt_epoch
         lr = args.pt_lr
         bs = args.pt_bs
-        train_msg = '> Training Classification Head...'
-        ckpt_name = 'MobileNetV2_pt_ep{}_bs{}_lr{}.pth'.format(args.pt_epoch, args.pt_bs, args.pt_lr)
+        train_msg = '\n> Training Classification Head...'
+        ckpt_name = '{}_pt_ep{}_bs{}_lr{}.pth'.format(args.model_name, args.pt_epoch, args.pt_bs, args.pt_lr)
     elif phase == 'finetune':
-        # params = model.parameters()
         for _, p in model.named_parameters():
             p.requires_grad = True
             
         epoch = args.ft_epoch
         lr = args.ft_lr
         bs = args.ft_bs
-        train_msg = '> Finetuning...'
-        ckpt_name = 'MobileNetV2_ft_ep{}_bs{}_lr{}.pth'.format(args.ft_epoch, args.ft_bs, args.ft_lr)
+        train_msg = '\n> Finetuning...'
+        ckpt_name = '{}_ft_ep{}_bs{}_lr{}.pth'.format(args.model_name, args.ft_epoch, args.ft_bs, args.ft_lr)
     
-    optimizer = optim.RMSprop(filter(lambda p: p.requires_grad, model.parameters()), lr=lr)
+    if args.model_name == 'mobilenet_v2':
+        optimizer = optim.RMSprop(filter(lambda p: p.requires_grad, model.parameters()), lr=lr)
+    elif args.model_name == 'efficientnet_b0':
+        optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=lr)
     scheduler = lr_scheduler.ReduceLROnPlateau(optimizer=optimizer,
-                                               mode='max', 
-                                               threshold=args.min_delta,
-                                               patience=args.patience,
-                                               factor=args.factor,
-                                               cooldown=args.cooldown,
-                                               min_lr=0.00000001)
+                                            mode='max', 
+                                            threshold=args.min_delta,
+                                            patience=args.patience,
+                                            factor=args.factor,
+                                            cooldown=args.cooldown,
+                                            min_lr=0.00000001)
     early_stopping = EarlyStopping(patience=10, min_delta=0.005)
     
     train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=bs, shuffle=True, num_workers=4)
@@ -185,10 +182,12 @@ def prepare_and_train(args, model, train_dataset, val_dataset, device, log_file,
         evaluate(trained_model, val_dataloader, len(val_dataset), device, log_file)
     
     # Save
-    custom_print('> Saving Model...', log_file)
+    custom_print('\n> Saving Model...', log_file)
     custom_print(' >> Saved Path: {}'.format(save_dir), log_file)
     
     save_model(model=trained_model, optimizer=optimizer, file_path=os.path.join(save_dir, ckpt_name))
     
     with open(os.path.join(save_dir, 'args.json'), 'w') as out:
         json.dump(vars(args), out, indent=4)
+        
+    return trained_model
