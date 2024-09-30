@@ -1,0 +1,3 @@
+[submodule "ml-cvnets"]
+	path = ml-cvnets
+	url = https://github.com/apple/ml-cvnets.git
