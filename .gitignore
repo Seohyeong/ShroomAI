@@ -1,11 +1,14 @@
 ShroomAI/dataset/inat_300/
 ShroomAI/dataset/inat_300.zip
+ShroomAI/dataset/meta.json
 
 ShroomAI/dataset/images_100_3314/
 ShroomAI/dataset/images_100_3314.zip
 ShroomAI/dataset/images_100_3314_meta.json
 
 ShroomAI/ckpt/
+
+ShroomAI/models/mobilevitv2-0.75*
 
 __pycache__
 
