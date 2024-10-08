@@ -1,14 +1,17 @@
 import argparse
 import datetime
+import json
 import os
+import sys
+sys.path.append('.')
 
 import torch
 import torch.backends.cudnn as cudnn
 
-from dataset.dataset import MushroomDataset
-from models.shroomnet import ShroomNet
-from train import prepare_and_train
-from utils.utils import custom_print
+from ShroomAI.dataset.dataset import MushroomDataset
+from ShroomAI.models.shroomnet import ShroomNet
+from ShroomAI.train import prepare_and_train
+from ShroomAI.utils.utils import custom_print
 
 cudnn.benchmark = True
 
@@ -17,7 +20,7 @@ def main():
 
     # path
     parser.add_argument('--dataset_dir_path', type=str,
-                        default='/home/user/seohyeong/ShroomAI/ShroomAI/dataset/images_100_3314')
+                        default='/home/user/seohyeong/ShroomAI/ShroomAI/dataset/inat_300')
     parser.add_argument('--meta_info_path', type=str,
                         default=None) # '/home/user/seohyeong/ShroomAI/ShroomAI/dataset/images_100_3314_meta.json'
     parser.add_argument('--ckpt_dir_path', type=str,
@@ -28,7 +31,7 @@ def main():
 
     # backbone model
     parser.add_argument('--model_name', type=str, default='efficientnet_b0', 
-                        choices=['mobilenet_v2', 'efficientnet_b0'])
+                        choices=['mobilenet_v2', 'efficientnet_b0', 'mobilevitv2-0.75'])
     
     # lr decay
     parser.add_argument('--patience', type=int, default=3)
@@ -75,6 +78,11 @@ def main():
         save_dir = os.path.join(args.ckpt_dir_path, '{}_{}'.format(args.model_name, datetime.datetime.now().strftime('%Y%m%d_%H%M%S')))
         os.mkdir(save_dir)
         log_file = os.path.join(save_dir, "log.txt")
+        
+        # save label map
+        label_map_path = os.path.join(save_dir, "label_map.json")
+        with open(label_map_path, 'w') as outfile: 
+            json.dump(train_dataset.name2label, outfile, indent=4)
         
         custom_print(f'\n> Loading Pre-trained {args.model_name}...', log_file)
         shroomnet = ShroomNet(num_classes=num_classes, model_name=args.model_name)

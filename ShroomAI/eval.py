@@ -4,9 +4,9 @@ import os
 import torch
 import torch.nn as nn
 
-from dataset.dataset import MushroomDataset
-from models.shroomnet import ShroomNet
-from utils.utils import custom_print
+from ShroomAI.dataset.dataset import MushroomDataset
+from ShroomAI.models.shroomnet import ShroomNet
+from ShroomAI.utils.utils import custom_print
 
 # TODO: merge this function with train() in train.py
 def evaluate(model, dataloader, dataset_size, device, log_file):

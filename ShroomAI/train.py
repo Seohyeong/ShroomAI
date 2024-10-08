@@ -11,8 +11,8 @@ import torch.optim as optim
 from torch.optim import lr_scheduler
 import torch.backends.cudnn as cudnn
 
-from eval import evaluate
-from utils.utils import EarlyStopping, custom_print, save_model
+from ShroomAI.eval import evaluate
+from ShroomAI.utils.utils import EarlyStopping, custom_print, save_model
 
 cudnn.benchmark = True
 
