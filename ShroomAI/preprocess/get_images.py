@@ -11,6 +11,7 @@ from PIL import Image
 from random import sample
 import requests
 import shutil
+import time
 from tqdm import tqdm
 
 
@@ -59,9 +60,9 @@ def get_urls_and_save_paths(filtered_df, args, split='train'):
 
     for _, row in tqdm(filtered_df.iterrows(), total = len(filtered_df)):
         url = str(row["identifier"])
-        label = str.lower(row["species"]).replace(" ", "_")
+        label = str(row["species"])
         label_dir_path = os.path.join(args.img_dir_path, split, label)
-        save_path = os.path.join(label_dir_path, str(row["gbifID"])+ ".jpg")
+        save_path = os.path.join(label_dir_path, str(row["uniqueID"])+ ".jpg")
 
         if len(os.listdir(label_dir_path)) + len(class_to_paths[label]) >= args.max_images_per_class:
             continue
@@ -70,8 +71,8 @@ def get_urls_and_save_paths(filtered_df, args, split='train'):
 
         if args.exclude:
             for exclude_path in exclude_paths:
-                exclude_train_path = os.path.join(exclude_path, 'train', label, str(row["gbifID"])+ ".jpg")
-                exclude_test_path = os.path.join(exclude_path, 'test', label, str(row["gbifID"])+ ".jpg")
+                exclude_train_path = os.path.join(exclude_path, 'train', label, str(row["uniqueID"])+ ".jpg")
+                exclude_test_path = os.path.join(exclude_path, 'test', label, str(row["uniqueID"])+ ".jpg")
                 if os.path.exists(exclude_train_path) or os.path.exists(exclude_test_path):
                     break_outer = True
                     break
@@ -84,7 +85,7 @@ def get_urls_and_save_paths(filtered_df, args, split='train'):
         else:
             image_urls.append(url)
             save_paths.append(save_path)
-            class_to_paths[label].append(row['gbifID'])
+            class_to_paths[label].append(row['uniqueID'])
 
     return image_urls, save_paths
 
@@ -96,8 +97,10 @@ def run(filtered_df, args):
         print('> Downloading Images in Parallel...')
         def download_with_progress(url, save_path):
             success = get_image(url, save_path, args.resize_size, run_parallel=True, print_error=args.print_error)
+            time.sleep(1) 
             if success:
                 pbar.update(1)
+            return
 
         with tqdm(total=len(image_urls)) as pbar:
             with concurrent.futures.ThreadPoolExecutor(max_workers=args.max_workers) as executor:
@@ -106,7 +109,7 @@ def run(filtered_df, args):
                     futures.append(executor.submit(download_with_progress, url, save_path))
 
                 for future in concurrent.futures.as_completed(futures):
-                    future.result() 
+                    future.result()
 
         pbar.close()
 
@@ -138,15 +141,15 @@ def main():
     parser.add_argument('--dataset_dir_path', type=str, 
                         default='/Users/seohyeong/Projects/ShroomAI/ShroomAI/dataset')
     parser.add_argument('--data_file_name', type=str, default='more_sampled_df.txt')
-    parser.add_argument('--img_dir_name', type=str, default='images_20240822')
+    parser.add_argument('--img_dir_name', type=str, default='inat_images_20241006')
     parser.add_argument('--exclude', type=list_of_strings, 
-                        default='images, images_20240725, images_20240731, images_20240802, images_20240805',
+                        default=None, # 'images, images_20240725, images_20240731, images_20240802, images_20240805, images_20240822'
                         help='names of directories to exclude')
 
     parser.add_argument('--seed', type=int, default=1)
-    parser.add_argument('--max_workers', type=int, default=12)
+    parser.add_argument('--max_workers', type=int, default=10)
     parser.add_argument('--max_images_per_class', type=int, default=200)
-    parser.add_argument('--resize_size', type=int, default=224)
+    parser.add_argument('--resize_size', type=int, default=256)
 
     parser.add_argument('--split_train_test', action='store_true', help='whether to split downloaded images into train/test split')
     parser.add_argument('--train_test_ratio', type=float, default=0.9, help='if 0.8 then 8:2 = train:test')
@@ -160,7 +163,7 @@ def main():
 
     # create image folder structure 
     if not args.img_dir_name:
-        args.img_dir_name = 'images_{}'.format(datetime.datetime.now().strftime('%Y%m%d'))
+        args.img_dir_name = 'inat_images_{}'.format(datetime.datetime.now().strftime('%Y%m%d'))
         args.img_dir_path = os.path.join(args.dataset_dir_path, args.img_dir_name)
         if not os.path.exists(args.img_dir_path):
             os.mkdir(args.img_dir_path)
@@ -176,7 +179,7 @@ def main():
         # create label folders inside image folder structure
         print('     > Creating Subdirectory of label...')
         for species in filtered_df['species'].unique():
-            label = str.lower(species).replace(" ", "_")
+            label = species
             train_label_dir_path = os.path.join(args.img_dir_path, 'train', label)
             test_label_dir_path = os.path.join(args.img_dir_path, 'test', label)
             if not os.path.exists(train_label_dir_path):
