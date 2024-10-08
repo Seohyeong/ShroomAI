@@ -1,10 +1,10 @@
 # About the Dataset
-This dataset consists of mushroom images collected from [GBIF (Global Biodiversity Information Facility)](https://www.gbif.org/). 
+This dataset consists of mushroom images (iNaturalist Research-grade Observations, between start of 2000 and end of 2024) collected from [GBIF (Global Biodiversity Information Facility)](https://www.gbif.org/). 
 Each image is associated with a specific species, selected from a hierarchical taxonomy that includes multiple layers such as family, phylum, class, order, and species. `Species` is used as labels for the images in the dataset.
 
 **Dataset Details**  
-Total Species: 747  
-Images per Species: Approximately 1,000  
+Total Species: 1,000  
+Images per Species: Approximately 300 
 
 The dataset is intended for research and exploration of mushroom species diversity and visual identification.
 
@@ -12,29 +12,34 @@ The dataset is intended for research and exploration of mushroom species diversi
 
 ### Download Information
 ```
-DOI: https://doi.org/10.15468/dl.ymrpej (may take some hours before being active)
-Creation Date: 07:27:46 13 July 2024
-Records included: 41968776 records from 3941 published datasets
-Compressed data size: 15.1 GB
+DOI: https://doi.org/10.15468/dl.mu3ech (may take some hours before being active)
+Creation Date: 03:27:51 2 October 2024
+Records included: 2702165 records from 1 published datasets
+Compressed data size: 1.6 GB
 Download format: DWCA
 Filter used:
 
 {
-  "TaxonKey" : [
-    "is Fungi"
+  "and" : [
+    "DatasetKey is iNaturalist Research-grade Observations",
+    "HasCoordinate is true",
+    "HasGeospatialIssue is false",
+    "OccurrenceStatus is Present",
+    "TaxonKey is Fungi",
+    "Year 2000-2024"
   ]
 }
 ```
 
 ### Citation
 ```
-GBIF.org (13 July 2024) GBIF Occurrence Download https://doi.org/10.15468/dl.ymrpej
+GBIF.org (02 October 2024) GBIF Occurrence Download  https://doi.org/10.15468/dl.mu3ech
 ```
 
 
 ## Downloaded Dataset Strcture
 ```
-./raw
+./raw_inat
     ├── citations.txt
     ├── meta.xml
     ├── metadata.xml
@@ -45,9 +50,9 @@ GBIF.org (13 July 2024) GBIF Occurrence Download https://doi.org/10.15468/dl.ymr
 ```
 From the downloaded dataset, this project uses `multimedia.txt` and `occurrence.txt` to create a train-ready dataset.
 
-Each row of `occurrence.txt` represents a single occurrence of an event, including information regarding taxonomy, location, and observations. Each occurrence is assigned a unique `gbifID`. The key columns this project works with are `gbifID`, `basisOfRecord`, `phylum`, and `species`.
+Each row of `occurrence.txt` represents a single occurrence of an event, including information regarding taxonomy, location, and observations. Each occurrence is assigned a unique `gbifID`.
 
-Each row of `multimedia.txt` represents a single image in the GBIF database. Different images can share the same gbifID because the ID is assigned to a unique occurrence event rather than a unique image (multiple images can be linked to a single observation occurrence event). The main columns for the data preprocessing step are `gbifID` and `identifier`, which contains the URL of the image.
+Each row of `multimedia.txt` represents a single image in the GBIF database. Different images can share the same gbifID because the ID is assigned to a unique occurrence event rather than a unique image (multiple images can be linked to a single observation occurrence event).
 
 
 ## Dataset Preprocessing
@@ -63,31 +68,21 @@ The purpose of this step is to filter out samples and link image URLs to occurre
 - Genus – a group of related species
 - Species – a group of similar organisms
 
-### Statistics of Phylum of Downloaded Dataset
-| Phylum  | # of Occurrence |
-| ------------- | ------------- |
-| Basidiomycota  |  ~ 20,000,000  |
-| Ascomycota  | ~ 20,000,000  |
-| Mucoromycota  | ~ 700,000  |
-| Chytridiomycota  | ~ 200,000 |
-| Glomeromycota  | ~ 150,000  |
-| Zoopagomycota  | ~ 50,000 |
-...
+### Basic Preprocessing Procedure
+`occurrence.txt` is first filtered to include only rows with a phylum of either **Basidiomycota** or **Ascomycota** (from which edible mushrooms originate). It is then inner joined with `multimedia.txt` using `gbifID` as the key. Images from year 2024 are used as validation split and the rest is used as train split. For further details, refer to `preprocess/preprocess.ipynb` and `preprocess/get_images.py`.
 
-`occurrence.txt` is first filtered to include only rows with a phylum of either **Basidiomycota** or **Ascomycota** (from which edible mushrooms originate). It is then inner joined with `multimedia.txt` using `gbifID` as the key. In cases where there are overlapping gbifIDs, the first row from multimedia.txt that matches the gbifID is used. For further details, refer to `preprocess/preprocess.py` and `preprocess/get_images.py`.
-
-The `species` column serves as a label, and only species with more than 1,000 occurrences are included (resulting in 1,000 images per class). This process yields a total of **747** mushroom species classes.
+The `species` column serves as a label. Top 1,000 most common species in the category of phylum Basidiomycota or Ascomycota. For the training dataset, 300 images are randomly scraped for each species from occurrences in between year 2020 and 2023. For the validation dataset, 30 images are randomly scraped from occurrences in year 2024.
 
 ### Dataset Structure
 Final structure of the collected dataset.
 
 ```
-./images
+./inat_300
     ├── train                             // train split
-    │     ├── abortiporus_biennis         // folder (species as name)
-    │     │     ├── 1257417838.jpg        // image  (gbifID as name)
+    │     ├── Abortiporus biennis         // folder (species as name)
+    │     │     ├── XXXXXXXXXX.jpg        // image  (gbifID as name)
     │     │     ├── ...
-    │     │     └── 3325367423.jpg
+    │     │     └── XXXXXXXXXX.jpg
     │     │     
     │     ├── ...
     │     │     ├── ...
@@ -95,15 +90,15 @@ Final structure of the collected dataset.
     │     │     └── ...
     │     │
     │     └── xylodon_radula
-    │           ├── 1294736284.jpg
+    │           ├── XXXXXXXXXX.jpg
     │           ├── ...
-    │           └── 9725374923.jpg
+    │           └── XXXXXXXXXX.jpg
     │
-    └── test                              // test split
-          ├── abortiporus_biennis
-          │     ├── 1257417838.jpg
+    └── val                              // val split
+          ├── Abortiporus biennis
+          │     ├── XXXXXXXXXX.jpg
           │     ├── ...
-          │     └── 3325367423.jpg
+          │     └── XXXXXXXXXX.jpg
           │
           ├── ...
           │     ├── ...
@@ -116,27 +111,7 @@ Final structure of the collected dataset.
                 └── 7528392372.jng
 ```
 
-This directory structure is compatible with Tensorflow ImageFolder data structure.
-```python
-import tensorflow_datasets as tfds
-builder = tfds.folder_dataset.ImageFolder('./images/')
-raw_train = builder.as_dataset(split='train', shuffle_files=True)
-raw_test = builder.as_dataset(split='test', shuffle_files=True)
-```
-
-## Statistics
-
-### Statistics of Taxonomy
-The table below displays the number of species for each class within the Ascomycota and Basidiomycota phyla. For detailed taxonomy information, refer to `readme_docs/taxonomy.tsv`.
-
-<img src="readme_docs/taxonomy_stat.png" width="500" >
-
 ### Examples
 These are 16 image/label pairs from the collected dataset.
 
 <img src="readme_docs/examples.png" width="700" >
-
-### Caveats
-Note that three species(Bulgaria inquinans, Exidia glandulosa, Exidiopsis effusa) were found to have a non-unique value of family.
-
-<img src="readme_docs/overlapping_species.png" width="700" >
