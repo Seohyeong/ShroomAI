@@ -1,8 +1,10 @@
 # no multitask learning, mobilenet
 CUDA_VISIBLE_DEVICES=0, python ShroomAI/run.py \
+  --dataset_dir_path '/home/user/seohyeong/ShroomAI/ShroomAI/dataset/inat_300' \
   --pretrain \
   --finetune \
   --model_name 'mobilenet_v2' \
+  --img_size 224 \
   --pt_bs 1024 \
   --ft_bs 256 \
   --eval_bs 1024 \
@@ -13,9 +15,11 @@ CUDA_VISIBLE_DEVICES=0, python ShroomAI/run.py \
 
 # multitask learning, mobilenet
 CUDA_VISIBLE_DEVICES=1, python ShroomAI/run.py \
+  --dataset_dir_path '/home/user/seohyeong/ShroomAI/ShroomAI/dataset/inat_300' \
   --pretrain \
   --finetune \
   --model_name 'mobilenet_v2' \
+  --img_size 224 \
   --pt_bs 1024 \
   --ft_bs 256 \
   --eval_bs 1024 \
@@ -23,18 +27,20 @@ CUDA_VISIBLE_DEVICES=1, python ShroomAI/run.py \
   --ft_epoch 30 \
   --pt_lr 0.0005 \
   --ft_lr 0.00001 \
-  --meta_info_path '/home/user/seohyeong/ShroomAI/ShroomAI/dataset/images_100_3314_meta.json'
+  --meta_info_path '/home/user/seohyeong/ShroomAI/ShroomAI/dataset/meta.json'
 
 # multitask learning, efficientnet
-CUDA_VISIBLE_DEVICES=0, python ShroomAI/run.py \
+CUDA_VISIBLE_DEVICES=1, python ShroomAI/run.py \
+  --dataset_dir_path '/home/user/seohyeong/ShroomAI/ShroomAI/dataset/inat_300' \
   --pretrain \
   --finetune \
   --model_name 'efficientnet_b0' \
+  --img_size 224 \
   --pt_bs 1024 \
   --ft_bs 256 \
   --eval_bs 1024 \
   --pt_epoch 20 \
   --ft_epoch 30 \
-  --pt_lr 0.01 \
-  --ft_lr 0.00005 \
-  --meta_info_path '/home/user/seohyeong/ShroomAI/ShroomAI/dataset/images_100_3314_meta.json'
+  --pt_lr 0.001 \
+  --ft_lr 0.00001 \
+  --meta_info_path '/home/user/seohyeong/ShroomAI/ShroomAI/dataset/meta.json'
