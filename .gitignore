@@ -23,5 +23,5 @@ ShroomAI/models/mobilevitv2-0.75*
 __pycache__
 
 .vscode/
-.DS_Store*
+.DS_Store
 README.md
