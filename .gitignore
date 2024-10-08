@@ -1,11 +1,21 @@
+# raw file
+ShroomAI/dataset/raw_inat/
+ShroomAI/dataset/test_df.txt
+ShroomAI/dataset/train_df.txt
+
+ShroomAI/dataset/sample_images/
+
+# inat 300 
 ShroomAI/dataset/inat_300/
 ShroomAI/dataset/inat_300.zip
 ShroomAI/dataset/meta.json
 
+# images 100
 ShroomAI/dataset/images_100_3314/
 ShroomAI/dataset/images_100_3314.zip
 ShroomAI/dataset/images_100_3314_meta.json
 
+# ckpt
 ShroomAI/ckpt/
 
 ShroomAI/models/mobilevitv2-0.75*
@@ -13,4 +23,5 @@ ShroomAI/models/mobilevitv2-0.75*
 __pycache__
 
 .vscode/
+.DS_Store*
 README.md
