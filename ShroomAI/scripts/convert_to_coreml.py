@@ -1,34 +1,46 @@
-import tensorflow as tf
+import torch
 import coremltools as ct
 import json
 
-print(tf.__version__)
+import sys
+sys.path.append('.')
 
-model_path = '/Users/seohyeong/Projects/ShroomAI/ShroomAI/ckpt/model_20240827_040406/model_weight_finetune.keras'
-label_map_path = '/Users/seohyeong/Projects/ShroomAI/ShroomAI/ckpt/model_20240827_040406/label_map.json'
+from ShroomAI.models.shroomnet import ShroomNet
 
-model = tf.keras.models.load_model(model_path)
+model_path = '/home/user/seohyeong/ShroomAI/ShroomAI/ckpt/mobilenet_v2_20241008_091337/mobilenet_v2_ft_ep30_bs256_lr1e-05.pth'
+label_map_path = '/home/user/seohyeong/ShroomAI/ShroomAI/ckpt/mobilenet_v2_20241008_091337/label_map.json'
 
-# model.author = 'seohyeong jeong'
-# model.short_description = 'Mushroom Image Classification'
-# model.input_description['image'] = 'Takes as input an image of a mushroom'
-# model.output_description['output'] = 'Prediction of the mushroom species'
+model = ShroomNet(num_classes=(1000, ), model_name='mobilenet_v2')
+checkpoint = torch.load(model_path, weights_only=True)
+model.load_state_dict(checkpoint['model_state_dict'])
+model.eval()
+
+example_input = torch.rand(1, 3, 224, 224) 
+traced_model = torch.jit.trace(model, example_input)
 
 with open(label_map_path) as f:
     label_map = json.load(f)
 
 class_labels = list(label_map.keys())
 
-# ref (inputs, output): https://apple.github.io/coremltools/docs-guides/source/convert-tensorflow-2-bert-transformer-models.html
-# ref (classifier_config): https://apple.github.io/coremltools/docs-guides/source/classifiers.html
-# ref (tf coreml version compatibility): https://github.com/tensorflow/tensorflow/issues/39001
-
-# tf: 2.17.0 (colab), keras: 3.3.3 (colab), coreml: 7.0
-# tf: 2.13.0, keras: 2.14.0, coreml: 6.3.0
-image_input = ct.ImageType(name="image", shape=(1, 224, 224, 3,), bias=[-1, -1, -1], scale=1/127.5)
+# set config
+image_input = ct.ImageType(name='mobilenetv2_1.00_224_input', 
+                           shape=example_input.shape, # (1, 224, 224, 3,) 
+                           bias=[- 0.485/(0.229) , - 0.456/(0.224), - 0.406/(0.225)], 
+                           scale=1/(0.226*255.0))
 classifier_config = ct.ClassifierConfig(class_labels)
 
-model = ct.converters.convert(model, source='tensorflow', convert_to='mlprogram', 
-                              inputs=[image_input], classifier_config=classifier_config)
+# convert
+mlmodel = ct.converters.convert(traced_model, 
+                                source='pytorch',
+                                convert_to='mlprogram',
+                                inputs=[image_input], 
+                                classifier_config=classifier_config)
 
-model.save('/Users/seohyeong/Projects/ShroomAI/ShroomAI/ckpt/model_weight_finetune.mlmodel')
+# set metadata
+mlmodel.author = 'Seohyeong Jeong'
+mlmodel.short_description = 'Mushroom Image Classification (currently 1,000 species supported, mobilenet_v2_ft_ep30_bs256_lr1e-05)'
+mlmodel.version = '1.0.0'
+
+# save mlmodel
+mlmodel.save('/home/user/seohyeong/ShroomAI/ShroomAI/ckpt/mobilenet_v2_20241008_091337/mobilenet_v2.mlpackage')
