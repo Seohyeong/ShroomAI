@@ -51,8 +51,8 @@ class MushroomDataset(Dataset):
             self.genus_labels = set()
             with open(meta_info_path, 'r') as file:
                 meta_info_json = json.load(file)
-            for name, info in meta_info_json.items():
-                self.name2genus[name.lower().replace(' ', '_')] = info['genus']
+            for info in meta_info_json:
+                self.name2genus[info['species']] = info['genus']
                 self.genus_labels.add(info['genus'])
             self.genus_labels = list(sorted(self.genus_labels))
             
