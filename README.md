@@ -1,6 +1,8 @@
 # ShroomAI
 Mushroom classification using a dataset scraped from [GBIF (Global Biodiversity Information Facility)](https://www.gbif.org/). 
 
+🍄 Check out the [app version](https://github.com/Seohyeong/ShroomScanner/tree/main)!
+
 ## About the Dataset
 This dataset consists of mushroom images (iNaturalist Research-grade Observations, between start of 2000 and end of 2024) collected from [GBIF (Global Biodiversity Information Facility)](https://www.gbif.org/). 
 Each image is associated with a specific species, selected from a hierarchical taxonomy that includes multiple layers such as family, phylum, class, order, and species. `Species` is used as labels for the images in the dataset.
