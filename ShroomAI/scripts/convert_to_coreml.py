@@ -16,7 +16,7 @@ def main():
                         default='/home/user/seohyeong/ShroomAI/ShroomAI/ckpt/mobilenet_v2_20241008_091337/mobilenet_v2_ft_ep30_bs256_lr1e-05.pth')
     parser.add_argument('--label_map_path', type=str,
                         default='/home/user/seohyeong/ShroomAI/ShroomAI/ckpt/mobilenet_v2_20241008_091337/label_map.json')
-    parser.add_argument('--mlpackage_save_name', type=str, default='mobilenet_v2.mlpackage')
+    parser.add_argument('--mlpackage_save_name', type=str, default='mobilenet_v2_finetuned.mlpackage')
     parser.add_argument('--num_classes', type=int, default=1000)
     parser.add_argument('--img_size', type=int, default=224)
     parser.add_argument('--set_meta_data', action='store_true')
@@ -43,7 +43,7 @@ def main():
     image_input = ct.ImageType(name='mobilenetv2_1.00_224_input', 
                             shape=example_input.shape,
                             bias=[- 0.485/(0.229) , - 0.456/(0.224), - 0.406/(0.225)], 
-                            scale=1/(0.226*255.0))
+                            scale=[1.0 / 0.229, 1.0 / 0.224, 1.0 / 0.225])
     classifier_config = ct.ClassifierConfig(class_labels)
 
     mlmodel = ct.converters.convert(traced_model, 
