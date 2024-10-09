@@ -22,7 +22,7 @@ def main():
     parser.add_argument('--dataset_dir_path', type=str,
                         default='/home/user/seohyeong/ShroomAI/ShroomAI/dataset/inat_300')
     parser.add_argument('--meta_info_path', type=str,
-                        default=None) # '/home/user/seohyeong/ShroomAI/ShroomAI/dataset/images_100_3314_meta.json'
+                        default=None)
     parser.add_argument('--ckpt_dir_path', type=str,
                         default='/home/user/seohyeong/ShroomAI/ShroomAI/ckpt')
     parser.add_argument('--pt_model_path', type=str,
