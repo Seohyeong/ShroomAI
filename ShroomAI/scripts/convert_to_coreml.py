@@ -39,11 +39,12 @@ def main():
         label_map = json.load(f)
     class_labels = list(label_map.keys())
 
-    # convert the ckpt
+    # convert the ckpt (mean: [0.485, 0.456, 0.406], std: [0.229, 0.224, 0.225])
+    # https://medium.com/@kuluum/pytroch-to-coreml-cheatsheet-fda57979b3c6
     image_input = ct.ImageType(name='mobilenetv2_1.00_224_input', 
                             shape=example_input.shape,
-                            bias=[- 0.485/(0.229) , - 0.456/(0.224), - 0.406/(0.225)], 
-                            scale=[1.0 / 0.229, 1.0 / 0.224, 1.0 / 0.225])
+                            scale = 1/(0.226*255.0),
+                            bias = [- 0.485/(0.229) , - 0.456/(0.224), - 0.406/(0.225)])
     classifier_config = ct.ClassifierConfig(class_labels)
 
     mlmodel = ct.converters.convert(traced_model, 
