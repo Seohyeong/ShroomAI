@@ -4,16 +4,9 @@ Mushroom classification using a dataset scraped from [GBIF (Global Biodiversity 
 🍄 Check out the [app version](https://github.com/Seohyeong/ShroomScanner/tree/main)!
 
 ## About the Dataset
-This dataset consists of mushroom images (iNaturalist Research-grade Observations, between start of 2000 and end of 2024) collected from [GBIF (Global Biodiversity Information Facility)](https://www.gbif.org/). 
-Each image is associated with a specific species, selected from a hierarchical taxonomy that includes multiple layers such as family, phylum, class, order, and species. `Species` is used as labels for the images in the dataset.
+The dataset used in this project comprises 300 mushroom images representing 1,000 different species. These species were selected based on the most commonly observed ones from iNaturalist Research-grade observations collected between 2000 and 2024, sourced from the [GBIF (Global Biodiversity Information Facility)](https://www.gbif.org/). 
 
-For further details, refer to `preprocess/preprocess.ipynb` and `preprocess/get_images.py`.
-
-**Dataset Details**  
-Total Species: 1,000   
-Images per Species (train): ~300   
-Images per Species (val): ~30 
-
+Each image is associated with a specific species, selected from a hierarchical taxonomy that includes multiple layers such as family, phylum, class, order, and species. `Species` is used as labels for the images in the dataset. For further details, refer to `preprocess/preprocess.ipynb` and `preprocess/get_images.py`.
 
 ### Citation
 ```
@@ -26,14 +19,26 @@ These are 16 image/label pairs from the collected dataset.
 <img src="readme_docs/examples.png" width="700" >
 
 
-## Results
-| Backbone         | # params   | acc           |  ckpt |
-|------------------|------------|---------------|-------|
-| mobilenet_v2     | 3,504,872  |      |  |
-| efficientnet_b0  | 5,288,548  |      |  |
+## About the Model
+The backbone models used in this project are MobileNetV2 and Efficientnet-B0. Since the number of classes matches that of the ImageNet dataset, no modification to the architecture have been made. 
+
+Training is done in two stages: training the classification head while keeping the rest of the model frozen and then training the entire model. The learning rate used in the classification head training is referred to as `partial` or `pretraining` (although it's not an entirely accurate term) and the learning rate used for training the full network is referred to as  `full` or `finetuning`.
+
+### Experimental Results
+| Backbone         | # params   | lr (partial/full) | ckpt |
+|------------------|------------|-------------------|------|
+| mobilenet_v2     | 3,504,872  |       |  | |
+| efficientnet_b0  | 5,288,548  |      |  | |
 
 
-## How to Train
+## Usuage
+
+### Setup
+```bash
+conda env create -f environment.yml
+```
+
+### Training the Model
 ```bash
 # example
 CUDA_VISIBLE_DEVICES=0, python ShroomAI/run.py \
@@ -51,4 +56,13 @@ CUDA_VISIBLE_DEVICES=0, python ShroomAI/run.py \
   --ft_lr 0.00001
 ```
 
-
+### Converting the Checkpoint
+```bash
+# example
+python ShroomAI/scripts/convert_to_coreml.py \
+  --model_path {path to model ckpt} \
+  --label_map_path {path to label map} \
+  --num_classes 1000 \
+  --img_size 224 \
+  --set_meta_data
+```
