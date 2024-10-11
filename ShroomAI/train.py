@@ -95,7 +95,7 @@ def train(model, dataloaders, dataset_sizes, optimizer, scheduler, num_epochs, d
                     epoch_loss_genus = 0.0
 
                 if phase == 'val':
-                    scheduler.step(epoch_acc) # TODO: scheduler update in val loop
+                    scheduler.step(epoch_loss)
                     if early_stopping:
                         early_stopping(epoch_acc)
                         if early_stopping.early_stop:
@@ -174,7 +174,7 @@ def prepare_and_train(args, model, train_dataset, val_dataset, device, log_file,
                           scheduler=scheduler,
                           num_epochs=epoch,
                           device=device,
-                          # early_stopping=early_stopping,
+                          early_stopping=early_stopping,
                           log_file=log_file)
 
     # Eval
