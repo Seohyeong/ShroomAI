@@ -97,7 +97,7 @@ def train(model, dataloaders, dataset_sizes, optimizer, scheduler, num_epochs, d
                 if phase == 'val':
                     scheduler.step(epoch_loss)
                     if early_stopping:
-                        early_stopping(epoch_acc)
+                        early_stopping(epoch_loss)
                         if early_stopping.early_stop:
                             custom_print(" >> Early stopping!", log_file)
                             model.load_state_dict(best_model_wts)
@@ -160,7 +160,7 @@ def prepare_and_train(args, model, train_dataset, val_dataset, device, log_file,
                                             factor=args.factor,
                                             cooldown=args.cooldown,
                                             min_lr=0.00000001)
-    early_stopping = EarlyStopping(patience=10, min_delta=0.005)
+    early_stopping = EarlyStopping(patience=5)
     
     train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=bs, shuffle=True, num_workers=4)
     val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=args.eval_bs, shuffle=False, num_workers=4)
