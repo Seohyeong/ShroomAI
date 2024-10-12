@@ -25,10 +25,20 @@ The backbone models used in this project are MobileNetV2 and Efficientnet-B0. Si
 Training is done in two stages: training the classification head while keeping the rest of the model frozen and then training the entire model. The learning rate used in the classification head training is referred to as `partial` or `pretraining` (although it's not an entirely accurate term) and the learning rate used for training the full network is referred to as  `full` or `finetuning`.
 
 ### Experimental Results
-| Backbone         | # params   | lr (partial/full) | ckpt |
-|------------------|------------|-------------------|------|
-| mobilenet_v2     | 3,504,872  |       |  | |
-| efficientnet_b0  | 5,288,548  |      |  | |
+
+#### Best Performing models
+
+```python
+if args.model_name == 'mobilenet_v2':
+    optimizer = optim.RMSprop(filter(lambda p: p.requires_grad, model.parameters()), lr=lr)
+elif args.model_name == 'efficientnet_b0':
+    optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=lr)
+```
+
+| backbone        | # params  | lr (partial/full) | acc (top1/top5) | ckpt |
+|-----------------|-----------|-------------------|-----------------|------|
+| mobilenet_v2    | 3,504,872 |   0.001 / 0.0001  | 0.5887 / 0.8270 | [download](https://drive.google.com/drive/folders/1eO99yCV81UHOAMWU6KaOGYua5u4k3r-U?usp=drive_link)|
+| efficientnet_b0 | 5,288,548 |   0.005 / 5e-05   | 0.5751 / 0.8174 | [download](https://drive.google.com/drive/folders/1HhvuRFYOCoPwBiR41O-8B8hJ7I4aBHC2?usp=drive_link)|
 
 
 ## Usuage
